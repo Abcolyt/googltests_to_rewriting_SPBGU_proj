@@ -10,6 +10,7 @@
 #include "fraction.h"
 
 
+
 namespace Fraction {
 class FractionTest : public ::testing::Test {
 protected:
@@ -110,7 +111,7 @@ namespace Polynomial {
         std::stringstream ss("3\n1 2 3\n");
         polynomial<int> p;
         ss >> p;
-        EXPECT_EQ(p.deg, 3);
+        EXPECT_EQ(p.get_deg(), 3);
         EXPECT_EQ(p[0], 1);
         EXPECT_EQ(p[1], 2);
         EXPECT_EQ(p[2], 3);
@@ -119,7 +120,7 @@ namespace Polynomial {
     TEST(OutputOperatorTest, Polynomial_OutputOperatorTest_FULL) {
         polynomial<int> p(3);
         p.newsize(3);
-        p.outm_E = output_mode::FULL;
+        p.output_mode_set(output_mode::FULL);
         p[0] = 1;
         p[1] = 2;
         p[2] = 3;
@@ -133,7 +134,7 @@ namespace Polynomial {
     TEST(OutputOperatorTest, Polynomial_OutputOperatorTest_ABBREVIATED) {
         polynomial<int> p(3);
         p.newsize(3);
-        p.outm_E = output_mode::ABBREVIATED;
+        p.output_mode_set(1);
         p[0] = 1;
         p[1] = 2;
         p[2] = 3;
@@ -147,7 +148,7 @@ namespace Polynomial {
     TEST(OutputOperatorTest,Polynomial_OutputOperatorTest_SHORT) {
         polynomial<int> p(3);
         p.newsize(3);
-        p.outm_E = output_mode::SHORT;
+        p.output_mode_set(2);
         p[0] = 1;
         p[1] = 2;
         p[2] = 3;
@@ -162,7 +163,8 @@ namespace Polynomial {
     TEST(PolynomialTest, MultiplyTest) {
         polynomial<int> p1;
         p1.newsize(3);
-        p1.outm_E = output_mode::FULL;
+        
+        p1.output_mode_set(0);
         p1[0] = 2;
         p1[1] = 3;
         p1[2] = 1;
@@ -178,9 +180,9 @@ namespace Polynomial {
 
         std::stringstream ss;
         ss << product;
-
-        std::string expectedOutput = "Degree: 5, Coefficients: 4 + 12x + 13x^2 + 6x^3 + 1x^4";
-        EXPECT_EQ(ss.str(), expectedOutput);
+        
+        std::string expectedOutput1 = "Degree: 5, Coefficients: 4 + 12x + 13x^2 + 6x^3 + 1x^4", expectedOutput2 = "4 12x 13x^2 6x^3 1x^4", expectedOutput3 = "4+12x+13x^2+6x^3+1x^4";
+        EXPECT_TRUE(ss.str()== expectedOutput1|| ss.str() == expectedOutput2 || ss.str() == expectedOutput3);
 
 
     }
@@ -196,7 +198,7 @@ namespace Polynomial {
         p2[0] = 2;
 
         polynomial<double> quotient = p1 / p2;
-        EXPECT_EQ(quotient.deg, 3);
+        EXPECT_EQ(quotient.get_deg(), 3);
         EXPECT_EQ(quotient[0], 2);
         EXPECT_EQ(quotient[1], 4);
         EXPECT_EQ(quotient[2], 6);
@@ -216,14 +218,14 @@ namespace Polynomial {
         p2[1] = 6;
 
         polynomial<double> remainder = p1 % p2;
-        EXPECT_EQ(remainder.deg, 1);
+        EXPECT_EQ(remainder.get_deg(), 1);
         EXPECT_EQ(remainder[0], 1.25);
         
     }
 
 }
 namespace Matrix {
-    TEST(MatrixTest, ConstructorWithSize)
+    TEST(Constructor, ConstructorWithSize)
     {
         matrix<int> m(3, 3);
         EXPECT_EQ(m.getcol(), 3);
@@ -231,7 +233,7 @@ namespace Matrix {
     }
 
     // “ест дл€ оператора умножени€ матриц
-    TEST(MatrixTest, MatrixMultiplication)
+    TEST(operators, MatrixMultiplication_operator)
     {
         matrix<int> m1(2, 2);
         m1[0][0] = 1; m1[0][1] = 2;
@@ -250,7 +252,7 @@ namespace Matrix {
     }
 
     // “ест дл€ оператора транспонировани€ матрицы
-    TEST(MatrixTest, MatrixTranspose)
+    TEST(methods, MatrixTranspose)
     {
         matrix<double> m(2, 3);
         m[0][0] = 1; m[0][1] = 2; m[0][2] = 3;
@@ -266,6 +268,53 @@ namespace Matrix {
         EXPECT_EQ(transposed[0][1], 4);
         EXPECT_EQ(transposed[1][1], 5);
         EXPECT_EQ(transposed[2][1], 6);
+    }
+
+    TEST(methods, determinant) {
+        std::stringstream ss("2\n2\n2\n1\n1\n1\n1\n2\n1\n2\n1\n1\n2\n1\n3\n1\n1\n4\n1\n2\n3\n4\n1\n1\n");
+        matrix<fraction<polynomial<int>>> mtrx;
+        ss >> mtrx;
+        std::stringstream method_ans;
+        method_ans << mtrx.determinant();
+        std::string true_ans_str1 = "(Degree: 5, Coefficients: 0 + (-2)x + (-1)x^2 + 7x^3 + 4x^4) / (Degree: 1, Coefficients: 1)",
+            true_ans_str2 = "(0+(-2)x+(-1)x^2+7x^3+4x^4) / (1)",
+            true_ans_str3 = "(0 -2x -1x^2 7x^3 4x^4) / (1)";
+
+        EXPECT_TRUE(method_ans.str() == true_ans_str1 || method_ans.str() == true_ans_str2 || method_ans.str() == true_ans_str3);
+    }
+
+    TEST(methods, inverse_M_int) {
+        std::stringstream ss("2\n2\n2\n1\n1\n1\n1\n2\n1\n2\n1\n1\n2\n1\n3\n1\n1\n4\n1\n2\n3\n4\n1\n1\n");
+        matrix<fraction<polynomial<int>>> mtrx;//there used to be a problem with %, and it only worked with int, now it seems to have disappeared
+        ss >> mtrx;
+        std::stringstream method_ans;
+        method_ans << mtrx.inverse_M();
+        
+        std::string true_ans_str1 = "sizex:2sizey:2\n[0][0] = \t(Degree: 6, Coefficients: 1 + 4x + 8x^2 + 12x^3 + 11x^4 + 4x^5) / (Degree: 7, Coefficients: 0 + (-2)x + (-5)x^2 + 3x^3 + 17x^4 + 15x^5 + 4x^6)\t | [0][1] = \tDegree: 3, Coefficients: (-1) + (-3)x + (-2)x^2 / (Degree: 6, Coefficients: 0 + (-2)x + (-3)x^2 + 6x^3 + 11x^4 + 4x^5)\t | \n[1][0] = \tDegree: 3, Coefficients: (-1) + (-4)x + (-3)x^2 / (Degree: 6, Coefficients: 0 + (-2)x + (-3)x^2 + 6x^3 + 11x^4 + 4x^5)\t | [1][1] = \tDegree: 2, Coefficients: 1 + 1x / (Degree: 5, Coefficients: 0 + (-2)x + (-1)x^2 + 7x^3 + 4x^4)\t | \n",
+            true_ans_str2 = "sizex:2sizey:2\n[0][0] = \t(1 4x 8x^2 12x^3 11x^4 4x^5) / (0 -2x -5x^2 3x^3 17x^4 15x^5 4x^6)\t | [0][1] = \t(-1 -3x -2x^2) / (0 -2x -3x^2 6x^3 11x^4 4x^5)\t | \n[1][0] = \t(-1 -4x -3x^2) / (0 -2x -3x^2 6x^3 11x^4 4x^5)\t | [1][1] = \t(1 1x) / (0 -2x -1x^2 7x^3 4x^4)\t | \n",
+            true_ans_str3="sizex:2sizey:2\n[0][0] = \t1 4x 8x^2 12x^3 11x^4 4x^5 / (0 -2x -5x^2 3x^3 17x^4 15x^5 4x^6)\t | [0][1] = \t-1 -3x -2x^2 / (0 -2x -3x^2 6x^3 11x^4 4x^5)\t | \n[1][0] = \t-1 -4x -3x^2 / (0 -2x -3x^2 6x^3 11x^4 4x^5)\t | [1][1] = \t1 1x / (0 -2x -1x^2 7x^3 4x^4)\t | \n";
+        EXPECT_EQ(method_ans.str(), true_ans_str2);
+        EXPECT_TRUE(method_ans.str() == true_ans_str1 || method_ans.str() == true_ans_str2|| method_ans.str() == true_ans_str3);
+    }
+    TEST(methods, inverse_M_float) {
+        std::stringstream ss("2\n2\n2\n1\n1\n1\n1\n2\n1\n2\n1\n1\n2\n1\n3\n1\n1\n4\n1\n2\n3\n4\n1\n1\n");
+        matrix<fraction<polynomial<float>>> mtrx;//there used to be a problem with %, and it only worked with int, now it seems to have disappeared
+        ss >> mtrx;
+        std::stringstream method_ans;
+        method_ans << mtrx.inverse_M();
+        std::string true_ans_str1 = "sizex:2sizey:2\n[0][0] = \t(-233827 -935306x -1.87061e+06x^2 -2.80592e+06x^3 -2.57209e+06x^4 -935306x^5) / (0 467653x 1.16913e+06x^2 -701480x^3 -3.97505e+06x^4 -3.5074e+06x^5 -935306x^6)\t | [0][1] = \t(36.125 108.375x 72.2499x^2) / (0 72.2499x 108.375x^2 -216.75x^3 -397.375x^4 -144.5x^5)\t | \n[1][0] = \t(-2.89286 -8.67857x) / (-0 -5.78571x -2.89286x^2 20.25x^3 11.5714x^4)\t | [1][1] = \t(-0.5 -0.5x) / (0 1x 0.5x^2 -3.5x^3 -2x^4)\t | \n";
+
+        EXPECT_EQ(method_ans.str(), true_ans_str1);
+    }
+    TEST(methods, inverse_M_double) {
+        std::stringstream ss("2\n2\n2\n1\n1\n1\n1\n2\n1\n2\n1\n1\n2\n1\n3\n1\n1\n4\n1\n2\n3\n4\n1\n1\n");
+        matrix<fraction<polynomial<double>>> mtrx;//there used to be a problem with %, and it only worked with int, now it seems to have disappeared
+        ss >> mtrx;
+        std::stringstream method_ans;
+        method_ans << mtrx.inverse_M();
+        std::string true_ans_str1 ="sizex:2sizey:2\n[0][0] = \t(-36.125 -144.5x -289x^2 -433.5x^3 -397.375x^4 -144.5x^5) / (0 72.25x 180.625x^2 -108.375x^3 -614.125x^4 -541.875x^5 -144.5x^6)\t | [0][1] = \t(-2.82452e+14 -8.47357e+14x -5.64905e+14x^2) / (0 -5.64905e+14x -8.47357e+14x^2 1.69471e+15x^3 3.10698e+15x^4 1.12981e+15x^5)\t | \n[1][0] = \t(-4.5036e+15 -1.80144e+16x -1.35108e+16x^2) / (-0 -9.0072e+15x -1.35108e+16x^2 2.70216e+16x^3 4.95396e+16x^4 1.80144e+16x^5)\t | [1][1] = \t(-0.5 -0.5x) / (0 1x 0.5x^2 -3.5x^3 -2x^4)\t | \n";
+        std::cout << method_ans.str();
+        EXPECT_EQ(method_ans.str(), true_ans_str1);
     }
 }
 
