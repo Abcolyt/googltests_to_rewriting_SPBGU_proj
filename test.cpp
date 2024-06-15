@@ -232,26 +232,51 @@ namespace Matrix {
         EXPECT_EQ(m.getrow(), 3);
     }
 
-    // “ест дл€ оператора умножени€ матриц
-    TEST(operators, MatrixMultiplication_operator)
+
+    TEST(operators, MatrixMultiplication_operator1)
     {
-        matrix<int> m1(2, 2);
-        m1[0][0] = 1; m1[0][1] = 2;
-        m1[1][0] = 3; m1[1][1] = 4;
+        matrix<int> m1(3, 3);
+        m1[0][0] = 1; m1[0][1] = 2; m1[0][2] = 3;
+        m1[1][0] = 4; m1[1][1] = 5; m1[1][2] = 6;
+        m1[2][0] = 7; m1[2][1] = 8; m1[2][2] = 9;
 
-        matrix<int> m2(2, 2);
-        m2[0][0] = 5; m2[0][1] = 6;
-        m2[1][0] = 7; m2[1][1] = 8;
+        matrix<int> m2(3, 3);
+        m2[0][0] = 9; m2[0][1] = 8; m2[0][2] = 7;
+        m2[1][0] = 6; m2[1][1] = 5; m2[1][2] = 4;
+        m2[2][0] = 3; m2[2][1] = 2; m2[2][2] = 1;
 
-        matrix<int> result( m1* m2);
+        matrix<int> result = m1 * m2;
 
-        EXPECT_EQ(result[0][0], 19);
-        EXPECT_EQ(result[0][1], 22);
-        EXPECT_EQ(result[1][0], 43);
-        EXPECT_EQ(result[1][1], 50);
+        EXPECT_EQ(result[0][0], 30); EXPECT_EQ(result[0][1], 24); EXPECT_EQ(result[0][2], 18);
+        EXPECT_EQ(result[1][0], 84); EXPECT_EQ(result[1][1], 69); EXPECT_EQ(result[1][2], 54);
+        EXPECT_EQ(result[2][0], 138); EXPECT_EQ(result[2][1], 114); EXPECT_EQ(result[2][2], 90);
     }
 
-    // “ест дл€ оператора транспонировани€ матрицы
+    TEST(operators, MatrixMultiplication_operator2)
+    {
+        matrix<int> m1(3, 3);
+        m1[0][0] = 1; m1[0][1] = 2; m1[0][2] = 3;
+        m1[1][0] = 4; m1[1][1] = 5; m1[1][2] = 6;
+        m1[2][0] = 7; m1[2][1] = 8; m1[2][2] = 9;
+
+        matrix<int> m2(3, 2);
+        m2[0][0] = 9; m2[0][1] = 8;
+        m2[1][0] = 6; m2[1][1] = 5;
+        m2[2][0] = 3; m2[2][1] = 2;
+
+        matrix<int> result = m1 * m2;
+        std::stringstream method_ans;
+        method_ans << result;
+
+        EXPECT_EQ(method_ans.str(), "sizex:3sizey:2\n[0][0] = \t30\t | [0][1] = \t24\t | \n[1][0] = \t84\t | [1][1] = \t69\t | \n[2][0] = \t138\t | [2][1] = \t114\t | \n");
+
+        EXPECT_EQ(result[0][0], 30); EXPECT_EQ(result[0][1], 24);
+        EXPECT_EQ(result[1][0], 84); EXPECT_EQ(result[1][1], 69);
+        EXPECT_EQ(result[2][0], 138); EXPECT_EQ(result[2][1], 114);
+    }
+
+
+
     TEST(methods, MatrixTranspose)
     {
         matrix<double> m(2, 3);
