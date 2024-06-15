@@ -276,8 +276,8 @@ namespace Matrix {
     }
 
 
-
-    TEST(methods, MatrixTranspose)
+    
+    TEST(methods, MatrixTranspose)//there were no problems in the rest of the program
     {
         matrix<double> m(2, 3);
         m[0][0] = 1; m[0][1] = 2; m[0][2] = 3;
