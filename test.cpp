@@ -279,7 +279,7 @@ namespace Matrix {
     
     TEST(methods, MatrixTranspose)//there were no problems in the rest of the program
     {
-        matrix<double> m(2, 3);
+        matrix<double> m(3,2);
         m[0][0] = 1; m[0][1] = 2; m[0][2] = 3;
         m[1][0] = 4; m[1][1] = 5; m[1][2] = 6;
         std::cout << m;
