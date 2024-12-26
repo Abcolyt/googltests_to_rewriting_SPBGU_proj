@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{316163dc-602c-45dd-95aa-2ece64de167f}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -33,7 +33,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Пользователь\source\repos\cpp_rewriting_SPBGU\_cpp_realisation_file;C:\Users\Пользователь\source\repos\cpp_rewriting_SPBGU\file_h;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\_cpp_realisation_file;$(SolutionDir)\file_h;C:\Users\Пользователь\source\repos\cpp_rewriting_SPBGU\_cpp_realisation_file;C:\Users\Пользователь\source\repos\cpp_rewriting_SPBGU\file_h;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
