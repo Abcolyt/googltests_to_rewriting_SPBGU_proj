@@ -3,13 +3,28 @@
 #include <iostream>
 #include <assert.h>
 #include <sstream>
-#include "complex.h"
-#include "matrix.h"
-#include "polynomial.h"
+
+
+
 #include <string>
-#include "fraction.h"
 
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <utility>
+
+#include "file_h/complex.h"
+#include "file_h/fraction.h"
+#include "file_h/polynomial.h"
+#include "file_h/matrix.h"
+
+#include "file_h/counting_methods_2.h"
+
+#include <functional>
+
+#include <random>
 
 namespace Fraction {
 class FractionTest : public ::testing::Test {
@@ -344,7 +359,125 @@ namespace Matrix {
     }
 }
 
+namespace Polynomial_counting_methods_2 {
 
+    TEST(nuton, first_static_data1) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::vector<std::pair<int, int>> Array_xy = { {1, 10}, {2, 20}, {3, 30},  {4,40},{5,50},{6,60},{7,70},{8,80},
+            {1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30} };
+
+        std::stringstream local_ans, true_ans;
+        local_ans << divided_difference0_to_k(Array_xy);
+
+        true_ans << "0 10x";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+
+    TEST(nuton, second_static_data) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::vector<std::pair<int, int>> Array_xy = {
+        {1, 11}, {2, 21}, {3, 31}, {4,41}, {5,51},
+        {1, 999}, {2, 888}, {3, 777}, 
+        {1, 1000}, {2, 2000}, {3, 3000}
+        };
+        std::stringstream local_ans, true_ans;
+        local_ans << divided_difference0_to_k(Array_xy);
+
+        true_ans << "1 10x";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+
+
+    // Generator of the vector x y via a lambda function
+    template<typename T, typename Func>    std::vector<std::pair<T, T>> generatePointsLambda(int k, T x0, T step, Func F) {
+        std::vector<std::pair<T, T>> points;
+        for (int i = 0; i < k; ++i) {
+            T x = x0 + i * step;
+            points.emplace_back(x, F(x));
+        }
+        return points;
+    }
+
+    TEST(nuton, third_static_data) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        
+
+        auto Func = [](float x) { return  1 + 10*x + 10 * x*x + 10 * x*x*x + 10 * x*x*x*x; };
+        auto Array_xy = generatePointsLambda(6, -4,1, Func);
+
+        std::stringstream local_ans, true_ans;
+        local_ans << divided_difference0_to_k(Array_xy);
+
+        true_ans << "1 10x 10x^2 10x^3 10x^4";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+
+    polynomial<int> generateRandomIntCoefficients(int min_degree=3, int max_degree=10, double min_c = -10, double max_c = 10) {
+        std::random_device rd;  
+        std::mt19937 gen(rd()); 
+        std::uniform_int_distribution<> dist_deg(min_degree, max_degree);
+        polynomial<int> Ans;
+        Ans.newsize(dist_deg(gen));
+
+        std::uniform_int_distribution<> dist_c(min_c, max_c);
+        for (int i = 0; i < Ans.get_deg(); ++i) {
+            Ans[i]=(dist_c(gen));
+        }
+
+        Ans.cutbag();
+
+        return Ans;
+    }
+
+    template<typename T>std::vector<std::pair<T, T>> generatePointsFuncPtr(int k, T x0, T step, polynomial<T>& polynom, T(*F)(polynomial<T> , T )) {
+        std::vector<std::pair<T, T>> points;
+        for (int i = 0; i < k; ++i) {
+            T x = x0 + i * step;
+            points.emplace_back(x, F(polynom,x));
+        }
+        return points;
+    }
+
+    TEST(nuton, first_dinamic_data_int) {
+        polynomial<int> pol;
+        pol = generateRandomIntCoefficients(3, 15, -220, 220);
+        std::cout << pol << '\n';
+        auto Array_xy = generatePointsFuncPtr(pol.get_deg()+3, -4, 1,pol, polynomialfunctions::f_polyn_x0_);
+        
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::cout << divided_difference0_to_k(Array_xy);
+
+
+        std::stringstream local_ans, true_ans;
+        local_ans << divided_difference0_to_k(Array_xy);
+        true_ans << pol;
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+    TEST(nuton, Array_dinamic_data_int) {
+        for (size_t i = 0; i < 25; i++)
+        {
+            polynomial<int> pol;
+            pol = generateRandomIntCoefficients(3, 15, -220, 220);
+            std::cout << pol << '\n';
+            auto Array_xy = generatePointsFuncPtr(pol.get_deg() + 3, -4, 1, pol, polynomialfunctions::f_polyn_x0_);
+
+            using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+            std::cout << divided_difference0_to_k(Array_xy);
+
+
+            std::stringstream local_ans, true_ans;
+            local_ans << divided_difference0_to_k(Array_xy);
+            true_ans << pol;
+            EXPECT_EQ(local_ans.str(), true_ans.str());
+        }
+       
+    }
+
+}
+   
 int main(int argc, char** argv) {
     ::testing::GTEST_FLAG(catch_exceptions) = false;
     ::testing::InitGoogleTest(&argc, argv);
