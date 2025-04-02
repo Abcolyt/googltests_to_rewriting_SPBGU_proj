@@ -367,7 +367,7 @@ namespace Polynomial_counting_methods_2 {
             {1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30} };
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "0 10x";
 
@@ -382,7 +382,7 @@ namespace Polynomial_counting_methods_2 {
         {1, 1000}, {2, 2000}, {3, 3000}
         };
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "1 10x";
 
@@ -408,51 +408,27 @@ namespace Polynomial_counting_methods_2 {
         auto Array_xy = generatePointsLambda(6, -4,1, Func);
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "1 10x 10x^2 10x^3 10x^4";
 
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
 
-    polynomial<int> generateRandomIntCoefficients(int min_degree=3, int max_degree=10, double min_c = -10, double max_c = 10) {
-        std::random_device rd;  
-        std::mt19937 gen(rd()); 
-        std::uniform_int_distribution<> dist_deg(min_degree, max_degree);
-        polynomial<int> Ans;
-        Ans.newsize(dist_deg(gen));
-
-        std::uniform_int_distribution<> dist_c(min_c, max_c);
-        for (int i = 0; i < Ans.get_deg(); ++i) {
-            Ans[i]=(dist_c(gen));
-        }
-
-        Ans.cutbag();
-
-        return Ans;
-    }
-
-    template<typename T>std::vector<std::pair<T, T>> generatePointsFuncPtr(int k, T x0, T step, polynomial<T>& polynom, T(*F)(polynomial<T> , T )) {
-        std::vector<std::pair<T, T>> points;
-        for (int i = 0; i < k; ++i) {
-            T x = x0 + i * step;
-            points.emplace_back(x, F(polynom,x));
-        }
-        return points;
-    }
-
+    using namespace counting_methods_2::Polynomial_interpolation::nuton2;
     TEST(nuton, first_dinamic_data_int) {
+       
         polynomial<int> pol;
         pol = generateRandomIntCoefficients(3, 15, -220, 220);
         std::cout << pol << '\n';
-        auto Array_xy = generatePointsFuncPtr(pol.get_deg()+3, -4, 1,pol, polynomialfunctions::f_polyn_x0_);
+        auto Array_xy = generatePointsFuncPtr<int>(pol.get_deg() + 3, -4, 1, pol, std::function<int(polynomial<int>, int)>(polynomialfunctions::f_polyn_x0_<int>));
         
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-        std::cout << divided_difference0_to_k(Array_xy);
+        std::cout << nuton_interpolation(Array_xy);
 
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
         true_ans << pol;
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
@@ -462,14 +438,14 @@ namespace Polynomial_counting_methods_2 {
             polynomial<int> pol;
             pol = generateRandomIntCoefficients(3, 15, -220, 220);
             std::cout << pol << '\n';
-            auto Array_xy = generatePointsFuncPtr(pol.get_deg() + 3, -4, 1, pol, polynomialfunctions::f_polyn_x0_);
+            auto Array_xy = generatePointsFuncPtr<int>(pol.get_deg() + 3,-4,1,pol,std::function<int(polynomial<int>, int)>(polynomialfunctions::f_polyn_x0_<int>));
 
             using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-            std::cout << divided_difference0_to_k(Array_xy);
+            std::cout << nuton_interpolation(Array_xy);
 
 
             std::stringstream local_ans, true_ans;
-            local_ans << divided_difference0_to_k(Array_xy);
+            local_ans << nuton_interpolation(Array_xy);
             true_ans << pol;
             EXPECT_EQ(local_ans.str(), true_ans.str());
         }
