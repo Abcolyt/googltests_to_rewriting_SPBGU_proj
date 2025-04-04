@@ -359,21 +359,22 @@ namespace Matrix {
     }
 }
 
-namespace Polynomial_counting_methods_2 {
 
+#include <boost/safe_numerics/safe_integer.hpp>
+
+namespace Polynomial_counting_methods_2 {
     TEST(nuton, first_static_data1) {
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
         std::vector<std::pair<int, int>> Array_xy = { {1, 10}, {2, 20}, {3, 30},  {4,40},{5,50},{6,60},{7,70},{8,80},
             {1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30} };
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "0 10x";
 
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
-
     TEST(nuton, second_static_data) {
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
         std::vector<std::pair<int, int>> Array_xy = {
@@ -382,13 +383,12 @@ namespace Polynomial_counting_methods_2 {
         {1, 1000}, {2, 2000}, {3, 3000}
         };
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "1 10x";
 
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
-
 
     // Generator of the vector x y via a lambda function
     template<typename T, typename Func>    std::vector<std::pair<T, T>> generatePointsLambda(int k, T x0, T step, Func F) {
@@ -399,7 +399,6 @@ namespace Polynomial_counting_methods_2 {
         }
         return points;
     }
-
     TEST(nuton, third_static_data) {
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
         
@@ -408,7 +407,7 @@ namespace Polynomial_counting_methods_2 {
         auto Array_xy = generatePointsLambda(6, -4,1, Func);
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
 
         true_ans << "1 10x 10x^2 10x^3 10x^4";
 
@@ -442,17 +441,18 @@ namespace Polynomial_counting_methods_2 {
     }
 
     TEST(nuton, first_dinamic_data_int) {
+        boost::safe_numerics::safe<int> a;
+        std::cout << a * 2 * LLONG_MAX;
         polynomial<int> pol;
         pol = generateRandomIntCoefficients(3, 15, -220, 220);
         std::cout << pol << '\n';
         auto Array_xy = generatePointsFuncPtr(pol.get_deg()+3, -4, 1,pol, polynomialfunctions::f_polyn_x0_);
         
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-        std::cout << divided_difference0_to_k(Array_xy);
-
+        std::cout << nuton_interpolation(Array_xy);
 
         std::stringstream local_ans, true_ans;
-        local_ans << divided_difference0_to_k(Array_xy);
+        local_ans << nuton_interpolation(Array_xy);
         true_ans << pol;
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
@@ -465,11 +465,11 @@ namespace Polynomial_counting_methods_2 {
             auto Array_xy = generatePointsFuncPtr(pol.get_deg() + 3, -4, 1, pol, polynomialfunctions::f_polyn_x0_);
 
             using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-            std::cout << divided_difference0_to_k(Array_xy);
+            std::cout << nuton_interpolation(Array_xy);
 
 
             std::stringstream local_ans, true_ans;
-            local_ans << divided_difference0_to_k(Array_xy);
+            local_ans << nuton_interpolation(Array_xy);
             true_ans << pol;
             EXPECT_EQ(local_ans.str(), true_ans.str());
         }
@@ -481,5 +481,5 @@ namespace Polynomial_counting_methods_2 {
 int main(int argc, char** argv) {
     ::testing::GTEST_FLAG(catch_exceptions) = false;
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();  
 }
