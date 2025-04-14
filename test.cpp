@@ -320,7 +320,7 @@ namespace Matrix {
         std::string true_ans_str1 = "(Degree: 5, Coefficients: 0 + (-2)x + (-1)x^2 + 7x^3 + 4x^4) / (Degree: 1, Coefficients: 1)",
             true_ans_str2 = "(0+(-2)x+(-1)x^2+7x^3+4x^4) / (1)",
             true_ans_str3 = "(0 -2x -1x^2 7x^3 4x^4) / (1)";
-
+        std::cout << mtrx.determinant();
         EXPECT_TRUE(method_ans.str() == true_ans_str1 || method_ans.str() == true_ans_str2 || method_ans.str() == true_ans_str3);
     }
 
