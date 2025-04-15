@@ -313,7 +313,7 @@ namespace Matrix {
 
     TEST(methods, determinant) {
         std::stringstream ss("2\n2\n2\n1\n1\n1\n1\n2\n1\n2\n1\n1\n2\n1\n3\n1\n1\n4\n1\n2\n3\n4\n1\n1\n");
-        matrix<fraction<polynomial<int>>> mtrx;
+        matrix<fraction<polynomial<float>>> mtrx;
         ss >> mtrx;
         std::stringstream method_ans;
         method_ans << mtrx.determinant();
