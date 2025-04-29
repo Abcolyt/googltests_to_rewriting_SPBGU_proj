@@ -208,7 +208,7 @@ namespace Polynomial {
         p1[0] = 4;
         p1[1] = 8;
         p1[2] = 12;
-
+        
         polynomial<double> p2; p2.newsize(1);
         p2[0] = 2;
 
