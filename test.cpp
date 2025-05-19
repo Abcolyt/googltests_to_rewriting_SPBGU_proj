@@ -239,7 +239,7 @@ namespace Polynomial {
     }
 
 }
-namespace matrix {
+namespace matrix_ {
     TEST(Constructor, ConstructorWithSize)
     {
         matrix<int> m(3, 3);
