@@ -1,18 +1,16 @@
+#define GTEST_HAS_TEST_SUITE_P 1
 #include "pch.h"
 #include <gtest/gtest.h>
-#include <iostream>
-
-#include <sstream>
-
-
-#include <string>
-
 
 #include <iostream>
 #include <sstream>
 #include <string>
+
 #include <vector>
 #include <utility>
+#include <functional>
+#include <random>
+#include <algorithm> 
 
 #include "file_h/complex.h"
 #include "file_h/fraction.h"
@@ -21,9 +19,7 @@
 
 #include "file_h/counting_methods_2.h"
 
-#include <functional>
 
-#include <random>
 
 namespace Fraction {
 class FractionTest : public ::testing::Test {
@@ -356,6 +352,170 @@ namespace Matrix {
         std::cout << method_ans.str();
         EXPECT_EQ(method_ans.str(), true_ans_str1);
     }
+
+
+    TEST(EigenvaluesTest, simple_QR_decomposition) {
+        const int n = 4;
+        const double eps = 1e-5; 
+        matrix<double> A_diag = matrix<double>::randomDiagonal(n, -100.0, 100.0);
+
+        std::vector<double> diag_values;
+        for (int i = 0; i < n; ++i) {
+            diag_values.push_back(A_diag[i][i]);
+        }
+        std::sort(diag_values.begin(), diag_values.end());
+        matrix<double> T, T_inv;
+        bool is_invertible = false;
+        int attempts = 0;
+
+        while (!is_invertible && attempts < 10) {
+            T = matrix<double>::random(n, n, -100.0, 100.0);
+            try {
+                T_inv = T.inverse_M();
+                is_invertible = true;
+            }
+            catch (...) {
+                attempts++;
+            }
+        }
+
+        if (!is_invertible) {
+            FAIL() << "Не удалось сгенерировать обратиую матрицу T";
+        }
+
+        matrix<double> A = T * A_diag * T_inv;
+
+        // Вычисление собственных значений
+        std::vector<std::complex<double>> eigenvalues = matrixfunction::compute_eigenvalues(A);
+        ASSERT_EQ(eigenvalues.size(), n) << "Количество собственных значений не совпадает";
+
+        // Проверка мнимых частей и сбор вещественных частей
+        std::vector<double> real_parts;
+        for (const auto& ev : eigenvalues) {
+            ASSERT_NEAR(ev.imag(), 0.0, eps) << "Обнаружена значимая мнимая часть";
+            real_parts.push_back(ev.real());
+        }
+
+        std::sort(real_parts.begin(), real_parts.end());
+
+        // Сравнение с исходными значениями
+        for (int i = 0; i < n; ++i) {
+            ASSERT_NEAR(real_parts[i], diag_values[i], eps)
+                << "Отличие на позиции " << i << ": " << real_parts[i] << " vs " << diag_values[i];
+        }
+
+    }
+
+
+
+
+
+    using EigenFunc = std::function<std::vector<std::complex<double>>(const matrix<double>&)>;
+
+    // Параметры теста: размер матрицы и функция для вычисления собств. значений
+    struct TestParams {
+        int matrix_size;
+        EigenFunc eigen_func;
+        std::string func_name;
+    };
+
+    class EigenvaluesTest : public testing::TestWithParam<TestParams> {
+    protected:
+        void SetUp() override {
+            params = GetParam();
+        }
+
+        void runTest() {
+            const int n = params.matrix_size;
+            const double eps = 1e-5;
+
+            // Генерация диагональной матрицы со случайными значениями
+            matrix<double> A_diag = matrix<double>::randomDiagonal(n, -100.0, 100.0);
+
+            // Сохранение исходных собственных значений
+            std::vector<double> diag_values;
+            for (int i = 0; i < n; ++i) {
+                diag_values.push_back(A_diag[i][i]);
+            }
+            std::sort(diag_values.begin(), diag_values.end());
+
+            // Генерация случайной обратимой матрицы T
+            matrix<double> T, T_inv;
+            bool is_invertible = false;
+            int attempts = 0;
+            const int max_attempts = 10;
+
+            while (!is_invertible && attempts < max_attempts) {
+                T = matrix<double>::random(n, n, -100.0, 100.0);
+                try {
+                    T_inv = T.inverse_M();
+                    is_invertible = true;
+                }
+                catch (...) {
+                    attempts++;
+                }
+            }
+
+            if (!is_invertible) {
+                FAIL() << "Failed to generate invertible matrix T after "
+                    << max_attempts << " attempts";
+            }
+
+            // Подобное преобразование
+            matrix<double> A = T * A_diag * T_inv;
+
+            // Вычисление собственных значений с помощью переданной функции
+            std::vector<std::complex<double>> eigenvalues = params.eigen_func(A);
+            ASSERT_EQ(eigenvalues.size(), n)
+                << "Number of eigenvalues doesn't match matrix size";
+
+            // Проверка мнимых частей и сбор вещественных частей
+            std::vector<double> real_parts;
+            for (const auto& ev : eigenvalues) {
+                // Для вещественных матриц мнимые части должны быть близки к 0
+                ASSERT_NEAR(ev.imag(), 0.0, eps)
+                    << "Significant imaginary part found in eigenvalue";
+                real_parts.push_back(ev.real());
+            }
+            std::sort(real_parts.begin(), real_parts.end());
+
+            // Сравнение с исходными значениями
+            for (int i = 0; i < n; ++i) {
+                EXPECT_NEAR(real_parts[i], diag_values[i], eps)
+                    << "Eigenvalue mismatch at position " << i
+                    << " for function " << params.func_name
+                    << " and matrix size " << n;
+            }
+        }
+
+        TestParams params;
+    };
+
+
+
+  
+
+
+    // Оберточные функции для разных реализаций
+    std::vector<std::complex<double>> wrap_compute_eigenvalues_3(const matrix<double>& m) {
+        return matrixfunction::compute_eigenvalues_3(m);
+    }
+
+    TEST_P(EigenvaluesTest, SimilarityTransformation) {
+        runTest();
+    }
+
+    
+    //INSTANTIATE_TEST_SUITE_P(
+    //    EigenTests,
+    //    EigenvaluesTest,
+    //    ::testing::Values(TestParams{4, wrap_compute_eigenvalues_3, "eig3" }),
+    //    [](const testing::TestParamInfo<TestParams>& info) {
+    //        return info.param.func_name + "_Size" + std::to_string(info.param.matrix_size);
+    //    }
+    //);
+
+
 }
 
 //
