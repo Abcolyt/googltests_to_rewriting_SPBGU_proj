@@ -497,8 +497,8 @@ namespace Matrix {
 
 
     // Оберточные функции для разных реализаций
-    std::vector<std::complex<double>> wrap_compute_eigenvalues_3(const matrix<double>& m) {
-        return matrixfunction::compute_eigenvalues_3(m);
+    std::vector<std::complex<double>> wrap_compute_eigenvalues(const matrix<double>& m) {
+        return matrixfunction::compute_eigenvalues(m);
     }
 
     TEST_P(EigenvaluesTest, SimilarityTransformation) {
@@ -506,14 +506,35 @@ namespace Matrix {
     }
 
     
-    //INSTANTIATE_TEST_SUITE_P(
-    //    EigenTests,
-    //    EigenvaluesTest,
-    //    ::testing::Values(TestParams{4, wrap_compute_eigenvalues_3, "eig3" }),
-    //    [](const testing::TestParamInfo<TestParams>& info) {
-    //        return info.param.func_name + "_Size" + std::to_string(info.param.matrix_size);
-    //    }
-    //);
+    // ... (предыдущий код без изменений)
+
+    // Определение оператора вывода для TestParams (необходимо для генерации имён)
+    std::ostream& operator<<(std::ostream& os, const TestParams& params) {
+        os << params.func_name << "_Size_" << params.matrix_size;
+        return os;
+    }
+
+    // Генератор имён для тестовых случаев
+    struct TestParamNameGenerator {
+        template <class ParamType>
+        std::string operator()(const testing::TestParamInfo<ParamType>& info) {
+            std::ostringstream oss;
+            oss << info.param; // использует перегруженный оператор <<
+            return oss.str();
+        }
+    };
+
+    INSTANTIATE_TEST_CASE_P(
+        EigenTests,
+        EigenvaluesTest,
+        ::testing::Values(
+            TestParams{ 4, wrap_compute_eigenvalues, "eig" },
+            TestParams{ 7, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
+            TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" }
+            // Добавьте другие параметры при необходимости
+        ),
+        TestParamNameGenerator()
+    );
 
 
 }
