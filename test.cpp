@@ -1,13 +1,23 @@
+#define GTEST_HAS_TEST_SUITE_P 1
 #include "pch.h"
 #include <gtest/gtest.h>
+
 #include <iostream>
-#include <assert.h>
 #include <sstream>
-#include "complex.h"
-#include "matrix.h"
-#include "polynomial.h"
 #include <string>
-#include "fraction.h"
+
+#include <vector>
+#include <utility>
+#include <functional>
+#include <random>
+#include <algorithm> 
+
+#include "file_h/complex.h"
+#include "file_h/fraction.h"
+#include "file_h/polynomial.h"
+#include "file_h/matrix.h"
+
+#include "file_h/counting_methods_2.h"
 
 
 
@@ -193,7 +203,7 @@ namespace Polynomial {
         p1[0] = 4;
         p1[1] = 8;
         p1[2] = 12;
-
+        
         polynomial<double> p2; p2.newsize(1);
         p2[0] = 2;
 
@@ -305,7 +315,7 @@ namespace Matrix {
         std::string true_ans_str1 = "(Degree: 5, Coefficients: 0 + (-2)x + (-1)x^2 + 7x^3 + 4x^4) / (Degree: 1, Coefficients: 1)",
             true_ans_str2 = "(0+(-2)x+(-1)x^2+7x^3+4x^4) / (1)",
             true_ans_str3 = "(0 -2x -1x^2 7x^3 4x^4) / (1)";
-
+        std::cout << mtrx.determinant();
         EXPECT_TRUE(method_ans.str() == true_ans_str1 || method_ans.str() == true_ans_str2 || method_ans.str() == true_ans_str3);
     }
 
@@ -342,11 +352,291 @@ namespace Matrix {
         std::cout << method_ans.str();
         EXPECT_EQ(method_ans.str(), true_ans_str1);
     }
+
+
+    TEST(EigenvaluesTest, simple_QR_decomposition) {
+        const int n = 4;
+        const double eps = 1e-5; 
+        matrix<double> A_diag = matrix<double>::randomDiagonal(n, -100.0, 100.0);
+
+        std::vector<double> diag_values;
+        for (int i = 0; i < n; ++i) {
+            diag_values.push_back(A_diag[i][i]);
+        }
+        std::sort(diag_values.begin(), diag_values.end());
+        matrix<double> T, T_inv;
+        bool is_invertible = false;
+        int attempts = 0;
+
+        while (!is_invertible && attempts < 10) {
+            T = matrix<double>::random(n, n, -100.0, 100.0);
+            try {
+                T_inv = T.inverse_M();
+                is_invertible = true;
+            }
+            catch (...) {
+                attempts++;
+            }
+        }
+
+        if (!is_invertible) {
+            FAIL() << "Не удалось сгенерировать обратиую матрицу T";
+        }
+
+        matrix<double> A = T * A_diag * T_inv;
+
+        // Вычисление собственных значений
+        std::vector<std::complex<double>> eigenvalues = matrixfunction::compute_eigenvalues(A);
+        ASSERT_EQ(eigenvalues.size(), n) << "Количество собственных значений не совпадает";
+
+        // Проверка мнимых частей и сбор вещественных частей
+        std::vector<double> real_parts;
+        for (const auto& ev : eigenvalues) {
+            ASSERT_NEAR(ev.imag(), 0.0, eps) << "Обнаружена значимая мнимая часть";
+            real_parts.push_back(ev.real());
+        }
+
+        std::sort(real_parts.begin(), real_parts.end());
+
+        // Сравнение с исходными значениями
+        for (int i = 0; i < n; ++i) {
+            ASSERT_NEAR(real_parts[i], diag_values[i], eps)
+                << "Отличие на позиции " << i << ": " << real_parts[i] << " vs " << diag_values[i];
+        }
+
+    }
+
+
+
+
+
+    using EigenFunc = std::function<std::vector<std::complex<double>>(const matrix<double>&)>;
+
+    
+    struct TestParams {
+        int matrix_size;
+        EigenFunc eigen_func;
+        std::string func_name;
+    };
+
+    class EigenvaluesTest : public testing::TestWithParam<TestParams> {
+    protected:
+        void SetUp() override {
+            params = GetParam();
+        }
+
+        void runTest() {
+            const int n = params.matrix_size;
+            const double eps = 1e-5;
+
+            matrix<double> A_diag = matrix<double>::randomDiagonal(n, -100.0, 100.0);
+
+            std::vector<double> diag_values;
+            for (int i = 0; i < n; ++i) {
+                diag_values.push_back(A_diag[i][i]);
+            }
+            std::sort(diag_values.begin(), diag_values.end());
+
+            matrix<double> T, T_inv;
+            bool is_invertible = false;
+            int attempts = 0;
+            const int max_attempts = 10;
+
+            while (!is_invertible && attempts < max_attempts) {
+                T = matrix<double>::random(n, n, -100.0, 100.0);
+                try {
+                    T_inv = T.inverse_M();
+                    is_invertible = true;
+                }
+                catch (...) {
+                    attempts++;
+                }
+            }
+
+            if (!is_invertible) {
+                FAIL() << "Failed to generate invertible matrix T after "
+                    << max_attempts << " attempts";
+            }
+
+            matrix<double> A = T * A_diag * T_inv;
+
+            std::vector<std::complex<double>> eigenvalues = params.eigen_func(A);
+            ASSERT_EQ(eigenvalues.size(), n)
+                << "Number of eigenvalues doesn't match matrix size";
+
+
+
+            std::vector<double> real_parts,image_part;
+
+            for (const auto& ev : eigenvalues) {
+                ASSERT_NEAR(ev.imag(), 0.0, eps)
+                    << "Significant imaginary part found in eigenvalue";
+                real_parts.push_back(ev.real());
+                //image_part.
+            }
+
+
+            std::sort(real_parts.begin(), real_parts.end());
+            for (int i = 0; i < n; ++i) {
+                EXPECT_NEAR(real_parts[i], diag_values[i], eps)
+                    << "Eigenvalue mismatch at position " << i
+                    << " for function " << params.func_name
+                    << " and matrix size " << n;
+            }
+
+
+            std::sort(real_parts.begin(), real_parts.end());
+            for (int i = 0; i < n; ++i) {
+                EXPECT_NEAR(real_parts[i], diag_values[i], eps)
+                    << "Eigenvalue mismatch at position " << i
+                    << " for function " << params.func_name
+                    << " and matrix size " << n;
+            }
+        }
+
+        TestParams params;
+    };
+
+
+
+  
+
+
+    std::vector<std::complex<double>> wrap_compute_eigenvalues(const matrix<double>& m) {
+        return matrixfunction::compute_eigenvalues(m);
+    }
+
+    TEST_P(EigenvaluesTest, SimilarityTransformation) {
+        runTest();
+    }
+
+    
+  
+    std::ostream& operator<<(std::ostream& os, const TestParams& params) {
+        os << params.func_name << "_Size_" << params.matrix_size;
+        return os;
+    }
+
+    struct TestParamNameGenerator {
+        template <class ParamType>
+        std::string operator()(const testing::TestParamInfo<ParamType>& info) {
+            std::ostringstream oss;
+            oss << info.param; 
+            return oss.str();
+        }
+    };
+
+    INSTANTIATE_TEST_CASE_P(
+        EigenTests,
+        EigenvaluesTest,
+        ::testing::Values(
+            TestParams{ 4, wrap_compute_eigenvalues, "eig" },
+            TestParams{ 7, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
+            TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
+            TestParams{ 10, [](auto& m) { return matrixfunction::compute_eigenvalues_3(m); }, "eig_3" }
+        ),
+        TestParamNameGenerator()
+    );
+
+
 }
 
+//
+//#include <boost/safe_numerics/safe_integer.hpp>
 
+namespace Polynomial_counting_methods_2 {
+    TEST(nuton, first_static_data1) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::vector<std::pair<int, int>> Array_xy = { {1, 10}, {2, 20}, {3, 30},  {4,40},{5,50},{6,60},{7,70},{8,80},
+            {1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30} };
+
+        std::stringstream local_ans, true_ans;
+        local_ans << nuton_interpolation(Array_xy);
+
+        true_ans << "0 10x";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+    TEST(nuton, second_static_data) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::vector<std::pair<int, int>> Array_xy = {
+        {1, 11}, {2, 21}, {3, 31}, {4,41}, {5,51},
+        {1, 999}, {2, 888}, {3, 777}, 
+        {1, 1000}, {2, 2000}, {3, 3000}
+        };
+        std::stringstream local_ans, true_ans;
+        local_ans << nuton_interpolation(Array_xy);
+
+        true_ans << "1 10x";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+
+    // Generator of the vector x y via a lambda function
+    template<typename T, typename Func>    std::vector<std::pair<T, T>> generatePointsLambda(int k, T x0, T step, Func F) {
+        std::vector<std::pair<T, T>> points;
+        for (int i = 0; i < k; ++i) {
+            T x = x0 + i * step;
+            points.emplace_back(x, F(x));
+        }
+        return points;
+    }
+    TEST(nuton, third_static_data) {
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        
+
+        auto Func = [](float x) { return  1 + 10*x + 10 * x*x + 10 * x*x*x + 10 * x*x*x*x; };
+        auto Array_xy = generatePointsLambda(6, -4,1, Func);
+
+        std::stringstream local_ans, true_ans;
+        local_ans << nuton_interpolation(Array_xy);
+
+        true_ans << "1 10x 10x^2 10x^3 10x^4";
+
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+
+    using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+    TEST(nuton, first_dinamic_data_int) {
+       
+        polynomial<int> pol;
+        pol = generateRandomIntCoefficients(3, 15, -220, 220);
+        std::cout << pol << '\n';
+        auto Array_xy = generatePointsFuncPtr<int>(pol.get_deg() + 3, -4, 1, pol, std::function<int(polynomial<int>, int)>(polynomialfunctions::f_polyn_x0_<int>));
+        
+        using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+        std::cout << nuton_interpolation(Array_xy);
+
+
+        std::stringstream local_ans, true_ans;
+        local_ans << nuton_interpolation(Array_xy);
+        true_ans << pol;
+        EXPECT_EQ(local_ans.str(), true_ans.str());
+    }
+    TEST(nuton, Array_dinamic_data_int) {
+        for (size_t i = 0; i < 25; i++)
+        {
+            polynomial<int> pol;
+            pol = generateRandomIntCoefficients(3, 15, -220, 220);
+            std::cout << pol << '\n';
+            auto Array_xy = generatePointsFuncPtr<int>(pol.get_deg() + 3,-4,1,pol,std::function<int(polynomial<int>, int)>(polynomialfunctions::f_polyn_x0_<int>));
+
+            using namespace counting_methods_2::Polynomial_interpolation::nuton2;
+            std::cout << nuton_interpolation(Array_xy);
+
+
+            std::stringstream local_ans, true_ans;
+            local_ans << nuton_interpolation(Array_xy);
+            true_ans << pol;
+            EXPECT_EQ(local_ans.str(), true_ans.str());
+        }
+       
+    }
+
+}
+   
 int main(int argc, char** argv) {
     ::testing::GTEST_FLAG(catch_exceptions) = false;
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();  
 }
