@@ -412,7 +412,7 @@ namespace Matrix {
 
     using EigenFunc = std::function<std::vector<std::complex<double>>(const matrix<double>&)>;
 
-    // Параметры теста: размер матрицы и функция для вычисления собств. значений
+    
     struct TestParams {
         int matrix_size;
         EigenFunc eigen_func;
@@ -429,17 +429,14 @@ namespace Matrix {
             const int n = params.matrix_size;
             const double eps = 1e-5;
 
-            // Генерация диагональной матрицы со случайными значениями
             matrix<double> A_diag = matrix<double>::randomDiagonal(n, -100.0, 100.0);
 
-            // Сохранение исходных собственных значений
             std::vector<double> diag_values;
             for (int i = 0; i < n; ++i) {
                 diag_values.push_back(A_diag[i][i]);
             }
             std::sort(diag_values.begin(), diag_values.end());
 
-            // Генерация случайной обратимой матрицы T
             matrix<double> T, T_inv;
             bool is_invertible = false;
             int attempts = 0;
@@ -461,25 +458,20 @@ namespace Matrix {
                     << max_attempts << " attempts";
             }
 
-            // Подобное преобразование
             matrix<double> A = T * A_diag * T_inv;
 
-            // Вычисление собственных значений с помощью переданной функции
             std::vector<std::complex<double>> eigenvalues = params.eigen_func(A);
             ASSERT_EQ(eigenvalues.size(), n)
                 << "Number of eigenvalues doesn't match matrix size";
 
-            // Проверка мнимых частей и сбор вещественных частей
             std::vector<double> real_parts;
             for (const auto& ev : eigenvalues) {
-                // Для вещественных матриц мнимые части должны быть близки к 0
                 ASSERT_NEAR(ev.imag(), 0.0, eps)
                     << "Significant imaginary part found in eigenvalue";
                 real_parts.push_back(ev.real());
             }
             std::sort(real_parts.begin(), real_parts.end());
 
-            // Сравнение с исходными значениями
             for (int i = 0; i < n; ++i) {
                 EXPECT_NEAR(real_parts[i], diag_values[i], eps)
                     << "Eigenvalue mismatch at position " << i
@@ -496,7 +488,7 @@ namespace Matrix {
   
 
 
-    // Оберточные функции для разных реализаций
+    // Оберточные функции 
     std::vector<std::complex<double>> wrap_compute_eigenvalues(const matrix<double>& m) {
         return matrixfunction::compute_eigenvalues(m);
     }
@@ -506,20 +498,17 @@ namespace Matrix {
     }
 
     
-    // ... (предыдущий код без изменений)
-
-    // Определение оператора вывода для TestParams (необходимо для генерации имён)
+  
     std::ostream& operator<<(std::ostream& os, const TestParams& params) {
         os << params.func_name << "_Size_" << params.matrix_size;
         return os;
     }
 
-    // Генератор имён для тестовых случаев
     struct TestParamNameGenerator {
         template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType>& info) {
             std::ostringstream oss;
-            oss << info.param; // использует перегруженный оператор <<
+            oss << info.param; 
             return oss.str();
         }
     };
@@ -531,7 +520,6 @@ namespace Matrix {
             TestParams{ 4, wrap_compute_eigenvalues, "eig" },
             TestParams{ 7, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
             TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" }
-            // Добавьте другие параметры при необходимости
         ),
         TestParamNameGenerator()
     );
