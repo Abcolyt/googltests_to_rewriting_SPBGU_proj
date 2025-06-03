@@ -464,14 +464,28 @@ namespace Matrix {
             ASSERT_EQ(eigenvalues.size(), n)
                 << "Number of eigenvalues doesn't match matrix size";
 
-            std::vector<double> real_parts;
+
+
+            std::vector<double> real_parts,image_part;
+
             for (const auto& ev : eigenvalues) {
                 ASSERT_NEAR(ev.imag(), 0.0, eps)
                     << "Significant imaginary part found in eigenvalue";
                 real_parts.push_back(ev.real());
+                //image_part.
             }
-            std::sort(real_parts.begin(), real_parts.end());
 
+
+            std::sort(real_parts.begin(), real_parts.end());
+            for (int i = 0; i < n; ++i) {
+                EXPECT_NEAR(real_parts[i], diag_values[i], eps)
+                    << "Eigenvalue mismatch at position " << i
+                    << " for function " << params.func_name
+                    << " and matrix size " << n;
+            }
+
+
+            std::sort(real_parts.begin(), real_parts.end());
             for (int i = 0; i < n; ++i) {
                 EXPECT_NEAR(real_parts[i], diag_values[i], eps)
                     << "Eigenvalue mismatch at position " << i
@@ -488,7 +502,6 @@ namespace Matrix {
   
 
 
-    // Оберточные функции 
     std::vector<std::complex<double>> wrap_compute_eigenvalues(const matrix<double>& m) {
         return matrixfunction::compute_eigenvalues(m);
     }
@@ -519,7 +532,8 @@ namespace Matrix {
         ::testing::Values(
             TestParams{ 4, wrap_compute_eigenvalues, "eig" },
             TestParams{ 7, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
-            TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" }
+            TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
+            TestParams{ 10, [](auto& m) { return matrixfunction::compute_eigenvalues_3(m); }, "eig_3" }
         ),
         TestParamNameGenerator()
     );
