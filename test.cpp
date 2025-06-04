@@ -533,7 +533,8 @@ namespace Matrix {
             TestParams{ 4, wrap_compute_eigenvalues, "eig" },
             TestParams{ 7, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
             TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues(m); }, "eig" },
-            TestParams{ 10, [](auto& m) { return matrixfunction::compute_eigenvalues_3(m); }, "eig_3" }
+            TestParams{ 10, [](auto& m) { return matrixfunction::compute_eigenvalues_3_qr(m); }, "eig_3_qr" },
+            TestParams{ 50, [](auto& m) { return matrixfunction::compute_eigenvalues_3_qr(m); }, "eig_3_qr" }
         ),
         TestParamNameGenerator()
     );
