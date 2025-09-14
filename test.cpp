@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-
+#include <array>
 
 #include <string>
 
@@ -86,8 +86,8 @@ TEST(Operator, SubtractionOperator) {
     fraction<int> result = f1 - f2;
     EXPECT_EQ(result.getNumerator(), 2);
     EXPECT_EQ(result.getDenominator(), 3);
-}
 
+}
 // Тест метода сокращения дроби
 TEST(Metode, SimplifyFraction) {
     fraction<int> f(8, 12);
@@ -454,6 +454,8 @@ namespace Polynomial_counting_methods_2 {
 }
    
 int main(int argc, char** argv) {
+
+  
     ::testing::GTEST_FLAG(catch_exceptions) = false;
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();  
