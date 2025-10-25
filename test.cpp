@@ -1,4 +1,4 @@
-#define GTEST_HAS_TEST_SUITE_P 1
+// #define GTEST_HAS_TEST_SUITE_P 1
 #include "pch.h"
 #include <gtest/gtest.h>
 
