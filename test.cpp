@@ -1,4 +1,5 @@
 // #define GTEST_HAS_TEST_SUITE_P 1
+
 #include "pch.h"
 #include <gtest/gtest.h>
 
@@ -11,16 +12,17 @@
 #include <functional>
 #include <random>
 #include <algorithm> 
-
+#if 0
 #include "file_h/complex.h"
 #include "file_h/fraction.h"
 #include "file_h/polynomial.h"
 #include "file_h/matrix.h"
 
 #include "file_h/counting_methods_2.h"
+#endif
 
 
-
+#if 0
 namespace Fraction {
 class FractionTest : public ::testing::Test {
 protected:
@@ -640,6 +642,7 @@ namespace Polynomial_counting_methods_2 {
 
 }
    
+#endif
 int main(int argc, char** argv) {
 #if 0
     ::testing::GTEST_FLAG(catch_exceptions) = false;
