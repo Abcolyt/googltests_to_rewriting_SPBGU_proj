@@ -556,7 +556,7 @@ namespace Polynomial_counting_methods_2 {
             {1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30},{1, 10}, {2, 20}, {3, 30} };
 
         std::stringstream local_ans, true_ans;
-        local_ans << nuton_interpolation(Array_xy);
+        local_ans << NutonInterpolation(Array_xy);
 
         true_ans << "0 10x";
 
@@ -570,7 +570,7 @@ namespace Polynomial_counting_methods_2 {
         {1, 1000}, {2, 2000}, {3, 3000}
         };
         std::stringstream local_ans, true_ans;
-        local_ans << nuton_interpolation(Array_xy);
+        local_ans << NutonInterpolation(Array_xy);
 
         true_ans << "1 10x";
 
@@ -594,7 +594,7 @@ namespace Polynomial_counting_methods_2 {
         auto Array_xy = generatePointsLambda(6, -4,1, Func);
 
         std::stringstream local_ans, true_ans;
-        local_ans << nuton_interpolation(Array_xy);
+        local_ans << NutonInterpolation(Array_xy);
 
         true_ans << "1 10x 10x^2 10x^3 10x^4";
 
@@ -610,11 +610,11 @@ namespace Polynomial_counting_methods_2 {
         auto Array_xy = generatePointsFuncPtr<int>(pol.get_deg() + 3, -4, 1, pol, std::function<int(polynomial<int>, int)>(polynomialfunctions::f_polyn_x0_<int>));
         
         using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-        std::cout << nuton_interpolation(Array_xy);
+        std::cout << NutonInterpolation(Array_xy);
 
 
         std::stringstream local_ans, true_ans;
-        local_ans << nuton_interpolation(Array_xy);
+        local_ans << NutonInterpolation(Array_xy);
         true_ans << pol;
         EXPECT_EQ(local_ans.str(), true_ans.str());
     }
@@ -628,11 +628,11 @@ namespace Polynomial_counting_methods_2 {
             auto Array_xy = generatePointsFuncPtr<Type>(pol.get_deg() + 3,-4,1,pol,std::function<Type(polynomial<Type>, Type)>(polynomialfunctions::f_polyn_x0_<Type>));
 
             using namespace counting_methods_2::Polynomial_interpolation::nuton2;
-            std::cout << nuton_interpolation(Array_xy);
+            std::cout << NutonInterpolation(Array_xy);
 
 
             std::stringstream local_ans, true_ans;
-            local_ans << nuton_interpolation(Array_xy);
+            local_ans << NutonInterpolation(Array_xy);
             pol=pol.cutbag();
             true_ans << pol;
             EXPECT_EQ(local_ans.str(), true_ans.str());
